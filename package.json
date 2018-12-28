@@ -8,7 +8,8 @@
     "pretest": "eslint src/*.js src/lib",
     "test": "jasmine",
     "dist:winlinux": "build -wl --x64",
-    "dist:mac": "build -m --x64"
+    "dist:mac": "build -m --x64",
+	 "pack": "electron-packager . myvott --win --out ../MyVOTT3 --arch=x64 --app-version=0.0.1 --electron-version=3.0.12"
   },
   "repository": "https://github.com/Microsoft/VoTT",
   "keywords": [
