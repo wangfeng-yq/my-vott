@@ -10514,6 +10514,9 @@ var CanvasTools;
             buildOn(paper) {
                 this.regionGroup = paper.g();
                 this.regionGroup.addClass("regionStyle");
+                //modify
+                //console.log(this)
+                //this.regionGroup.title = "person wangfeng"
                 this.regionGroup.addClass(this.styleID);
                 this.anchorsNode = new AnchorsElement(paper, this.x, this.y, this.rect, this.boundRects.host, this.onInternalChange.bind(this), this.onManipulationBegin, this.onManipulationEnd);
                 this.dragNode = new DragElement(paper, this.x, this.y, this.rect, this.boundRects.self, this.onInternalChange.bind(this), this.onManipulationBegin, this.onManipulationEnd);

@@ -446,6 +446,8 @@ function openPath(pathName, isDir, isRecords = false) {
   }
 
   async function loadTagger(e) {
+    //modify
+    console.log(config)
     if (framerate.validity.valid && inputtags.validity.valid) {
       $('.bootstrap-tagsinput').last().removeClass("invalid");
 
@@ -750,9 +752,13 @@ async function readRecord(pathname, recordName) {
   // The reader auto-closes after it reaches the end of the file.
 }
 
+
+
 //saves current video to config 
 //将标注内容写入文件
 function save() {
+  //modify
+  console.log("in the save()");
   var saveObject = {
     "frames": videotagging.frames,
     "framerate": $('#framerate').val(),
@@ -770,6 +776,7 @@ function save() {
   var saveLock;
   if (!saveLock) {
     saveLock = true;
+    
     fs.writeFile(`${videotagging.src}.json`, JSON.stringify(saveObject), () => {
       saveState = JSON.stringify(saveObject);
       console.log("saved");

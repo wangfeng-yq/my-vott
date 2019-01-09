@@ -116,7 +116,7 @@
                         </td>
                         <!-- 
                         总帧数   modify   
-                    -->
+                        -->
                         <td class="videoControlCell frameNumber">
                             <span id='frameAllText' class="textElements">共1800帧</span>
                             <!-- <input type='text' id='frameAllText' class="textElements" title="frame#"></span> -->
@@ -152,11 +152,17 @@
                     <span id="lockTag" title="lock tags" class="icon-pushpin taggingControls lockTag controlOff"
                         on-click='lockTagsClicked'></span>
                 </div>
-                <div class="addTagControls">
+                <!-- <div class="addTagControls">
                     <form id="addTagForm">
                         <input type="text" id="newTag">
                         <input type="submit" value="Add Tag">
                     </form>
+                </div> -->
+                <!--modify-->
+                <div>
+                    
+                    <input type="text" id="trackIdText">
+                    <input type="button" value="生成唯一trackId" on-click="trackIdTextClick">
                 </div>
                 <div style="clear: both">
                 </div>
@@ -225,17 +231,19 @@
                 this.regionLabelSpan = this.$$('#regionLabelSpan');
                 this.timeSpan = this.$$('#timeSpan');
                 this.frameText = this.$$("#frameText");
+                
                 //modify
-                this.frameAllText = this.$$("#frameText");
+                this.trackIdText = this.$$("#trackIdText");
+                //this.frameAllText = this.$$("#frameText");
                 this.playSpeed = this.$$("#playSpeed");
 
                 this.playbackSpan = this.$$("#playbackSpan");
 
                 //Form
-                this.form = this.$$('#addTagForm'),
+                // this.form = this.$$('#addTagForm'),
 
-                    // Buttons
-                    this.playButton = this.$$('#play-pause');
+                // Buttons
+                this.playButton = this.$$('#play-pause');
                 this.stepfwd = this.$$("#stepfwd");
                 this.stepbwd = this.$$("#stepbwd");
                 this.lockTag = this.$$("#lockTag");
@@ -256,6 +264,9 @@
                 this.ctx = this.overlay.getContext("2d");
                 this.aspect = 0;
                 this.snapWidth = 0;
+
+                //modify
+                this.uniqueTrackValue = 1;
 
                 // Init CanvasTools
                 this.initCanvasTools();
@@ -483,6 +494,11 @@
                     self.playingCallback();
                     event.stopPropagation();
                 });
+                //modify
+                this.trackIdText.addEventListener("keydown",function(){});
+                this.trackIdText.addEventListener("keyup",function(){});
+                this.trackIdText.addEventListener("input",function(){});
+
                 this.addEventListener("playSpeedSelected", function (e) {
                     self.playback(e.detail.playbackValue, e.detail.playbackText);
                 });
@@ -502,13 +518,15 @@
 
                     this.selectRegion(currentRegionUID)
                 });
-                this.form.addEventListener("submit", function (e) {
-                    e.preventDefault();
-                    newTag = document.getElementById("newTag").value;
-                    self.inputtagsarray.push(newTag);
-                    self.optionalTags.createTagControls(self.inputtagsarray);
-                    self.showAllRegions();
-                })
+                // this.form.addEventListener("submit", function (e) {
+                //     //$("#newTags").val("45");
+                //     //document.getElementById("newTag").value = 45;
+                //     // e.preventDefault();
+                //     // newTag = document.getElementById("newTag").value;
+                //     // self.inputtagsarray.push(newTag);
+                //     // self.optionalTags.createTagControls(self.inputtagsarray);
+                //     // self.showAllRegions();
+                // })
             },
 
             frameInputListener: function (event) {
@@ -559,6 +577,8 @@
             keyUpEventsListenerBinded: null,
 
             onNewAreaSelected: function (x1, y1, x2, y2) {
+                console.log("onNewAreaSelected start")
+                document.getElementById("trackIdText").value = "";
                 var threshold = 20;
                 var dx, dy;
                 var r = {};
@@ -657,7 +677,7 @@
                 }
                 return region;
             },
-
+            
             createRegion: function (x1, y1, x2, y2) {
                 let widthRatio = this.overlay.width / this.sourceWidth;
                 let heightRatio = this.overlay.height / this.sourceHeight;
@@ -668,6 +688,14 @@
                 var ry2 = y2 / heightRatio;
 
                 var region = this.addRegion(rx1, ry1, rx2, ry2);//Add to in-memory collection
+                //modify
+                if(document.getElementById("trackIdText").value) {
+                    region.trackId = document.getElementById("trackIdText").value;
+                }
+                
+                //modify
+                console.log("create region region.tags")
+                console.log(region.tags)
                 this.registerRegion(x1, y1, x2, y2, region.UID, region.tags); //add frame
 
                 //if there is only one tag enable it by default
@@ -708,22 +736,33 @@
                 }));
             },
             buildTagsDescriptor: function (tags) {
-
+                //modify
+               // console.log(tags)
 
                 let tagsDescriptor = null;
                 let primaryTag = null;
                 let secondaryTags = [];
                 if (tags.length > 0) {
                     let color = this.optionalTags.colors[this.inputtagsarray.indexOf(tags[0])];
-                    primaryTag = new this.CT.Base.Tags.Tag(tags[0], this.CT.Base.Tags.Tag.getHueFromColor(color) * 360);
+                    console.log("build  tag[0]")
+                    console.log(tags[0])
+                    if(tags[0] == "face" || tags[0] == "person"){
+                        primaryTag = new this.CT.Base.Tags.Tag(tags[0], this.CT.Base.Tags.Tag.getHueFromColor(color) * 360);
+                    } else {
+                        return null;
+                    }
+                    
 
                     secondaryTags = [];
-                    for (var i = 1; i < tags.length; i++) {
-                        let c = this.optionalTags.colors[this.inputtagsarray.indexOf(tags[i])];
-                        let t = new this.CT.Base.Tags.Tag(tags[i], this.CT.Base.Tags.Tag.getHueFromColor(c) * 360);
-                        secondaryTags.push(t)
-                    }
-
+                    // for (var i = 1; i < tags.length; i++) {
+                    //     let c = this.optionalTags.colors[this.inputtagsarray.indexOf(tags[i])];
+                    //     let t = new this.CT.Base.Tags.Tag(tags[i], this.CT.Base.Tags.Tag.getHueFromColor(c) * 360);
+                    //     secondaryTags.push(t)
+                    // }
+                    console.log("primaryTag.name")
+                    
+                    primaryTag.name = primaryTag.name + tags[1];
+                    console.log(primaryTag);
                     tagsDescriptor = new this.CT.Base.Tags.TagsDescriptor(primaryTag, secondaryTags);
                 }
 
@@ -731,17 +770,23 @@
             },
 
             addTagsToRegion: function (selectedTagsArray) {
+                console.log("addTagsToRegion start");
                 let currentRegion = this.selectedRegionId[0];
                 let region = this.getRegionById(currentRegion);
                 if (region != null) {
                     let tags = region.tags;
+                    //modify
+                    console.log(tags)
                     for (var i = 0; i < selectedTagsArray.length; i++) {
                         tags.push(selectedTagsArray[i]);
                     }
 
                     if (tags.length > 0) {
                         let tagsDescriptor = this.buildTagsDescriptor(tags);
+                        //modify
+                        //console.log(tagsDescriptor)
                         this.regionsManager.updateTagsById(region.UID, tagsDescriptor);
+                        //console.log(tagsDescriptor)
                     } else {
                         this.regionsManager.updateTagsById(region.UID, null);
                     }
@@ -775,6 +820,13 @@
                     }
                 }
             },
+
+            //modify
+            trackIdTextClick: function (){
+                //console.log("click")
+                document.getElementById("trackIdText").value = Number(Math.random().toString().substr(3,length) + Date.now()).toString(36);
+            },
+
             lockTagsClicked: function () {
                 var selTags = this.optionalTags.getSelectedTags();
                 //There has to be selected label/s
@@ -820,6 +872,9 @@
             },
 
             selectRegion: function (id, multiselection = false) {
+                //modify
+                // console.log("select Region" + id);
+
                 if (!this.multiselection && !multiselection) {
                     this.cleanSelectedElements();
                 }
@@ -830,12 +885,64 @@
 
                 if (id != "") {
                     let region = this.getRegionById(id);
-
+                    //modify
+                    let tid = document.getElementById("trackIdText").value;
+                    if(tid){
+                        console.log("tid")
+                        console.log(tid)
+                        region.trackId =  tid;
+                    }                
+                    document.getElementById("trackIdText").value = "";
+                    console.log("selectRegion ")
+                    console.log(region)
                     if (region && !this.selectedRegionId.includes(region.UID)) {
                         this.selectedRegionId.push(id);
 
                         var tags = region.tags;
                         this.optionalTags.displaySelectedTags(tags);
+                    }
+                    if(tid){
+                        var widthRatio = this.overlay.width / this.sourceWidth;
+                        var heightRatio = this.overlay.height / this.sourceHeight;
+
+                        let x1, y1, x2, y2;
+                        if (region.box != undefined) {
+                            // onscreen coordinates
+                            x1 = (region.box.x1 * widthRatio);
+                            y1 = (region.box.y1 * heightRatio);
+                            x2 = (region.box.x2 * widthRatio);
+                            y2 = (region.box.y2 * heightRatio);
+                        } else {
+                            // restore absolute coordinates
+                            let wRatio = this.sourceWidth / region.width;
+                            let hRatio = this.sourceHeight / region.height;
+                            x1 = (region.x1 * wRatio);
+                            y1 = (region.y1 * hRatio);
+                            x2 = (region.x2 * wRatio);
+                            y2 = (region.y2 * hRatio);
+                            region.box = {
+                                x1: x1,
+                                y1: y1,
+                                x2: x2,
+                                y2: y2
+                            };
+                            //onscreen coordinates
+                            x1 = x1 * widthRatio;
+                            y1 = y1 * heightRatio;
+                            x2 = x2 * widthRatio;
+                            y2 = y2 * heightRatio;
+                        }
+
+                        if (region.UID == undefined) {
+                            region.UID = this.generateUniqueId();
+                        }
+                        //register
+                        var myTags = region.tags;
+                        myTags[1] = region.trackId;
+                        this.registerRegion(x1, y1, x2, y2, region.UID, myTags);; //add frame 
+                        //redraw
+                        //Clears areaSelector state when moving across frames
+                        this.regionsManager.onManipulationEnd();
                     }
                 }
             },
@@ -877,7 +984,9 @@
             registerRegion: function (x1, y1, x2, y2, regionUID, tags) {
                 // Regions Manager
                 let tagsDescriptor = this.buildTagsDescriptor(tags);
-
+                // if(tagsDescriptor == null){
+                //     return;
+                // }
                 this.regionsManager.addRegion(regionUID, { x: x1, y: y1 }, { x: x2, y: y2 }, tagsDescriptor);
 
                 this.selectRegion(regionUID);
@@ -915,6 +1024,8 @@
                     //Draw all regions for this frame
                     for (var i = 0; i < regions.length; i++) {
                         var region = regions[i];
+                        // console.log("IIIIIIIIII" + i)
+                        // console.log(region)
                         //Frame was tagged as empty?
                         if (Object.keys(region).length === 0) {
                             this.indicateEmptyFrame(true);
@@ -955,8 +1066,14 @@
                         if (region.UID == undefined) {
                             region.UID = this.generateUniqueId();
                         }
-
-                        this.registerRegion(x1, y1, x2, y2, region.UID, region.tags);; //add frame                  
+                        
+                        //modify
+                        // console.log("region.tags showAllRegions")
+                        // console.log(region.tags)
+                        // var myTags = region.tags;
+                        // myTags[1] = region.trackId;
+                        this.registerRegion(x1, y1, x2, y2, region.UID, region.tags);; //add frame 
+                        
                     }
                     //Redraws all regions to ensure proper z-order stacking
                     this.regionsManager.redrawAllRegions();
@@ -972,7 +1089,7 @@
                */
             addRegion: function (x1, y1, x2, y2) {
                 this.resetEmptyFrame();//Clear empty frame logic
-
+                
                 var region = {
                     // relative for back compatiblity (v < 2.0)
                     x1: x1,
@@ -989,12 +1106,16 @@
                         y2: y2
                     },
                     UID: this.generateUniqueId(),
+                    //modify
+                    trackId: undefined,
                     id: this.uniqueTagId++,
                     type: this.regiontype,
                     tags: []
                 };
 
                 var regions = this.getCurrentFrameRegions();
+                //modify
+                console.log(regions)
                 //The array is populated and can contain multiple regions
                 if (this.multiregions == 1 && regions) {
                     region.name = regions.length + 1;
@@ -1114,12 +1235,26 @@
                 }
                 return unlabledTags;
             },
+            //查看当前帧是否有未tag的region
             checkRegionLabels: function () {
                 var unlabledTags = this.getUnlabeledRegionTags(this.getCurrentFrameId());
                 if (unlabledTags.length > 0) {
                     alert(`Cannot move to the next frame until all tags are labeled. Please label the following tags [${unlabledTags}] on the displayed frame.`);
                     return false;
                 }
+                //modify 判断当前帧 region是否有非person、face的标签
+                var regons = this.frames[this.getCurrentFrameId()];
+                var len = regons.length;
+                console.log("length" + len)
+                for(var i=1;i<len;i++) {
+                    // console.log("regons.tags[0]");
+                    // console.log(regons[i].tags[0]);
+                    // console.log(regons[i].tags[0] == "face");
+                    if (regons[i].tags[0] != "face" && regons[i].tags[0] != "person"){
+                        return false;
+                    }
+                }
+                
                 return true;
             },
             //used for init of image directory find way to reduce duplicate code
@@ -1294,6 +1429,9 @@
             },
             stepFwdClicked: function (fireEvents = true) {
                 if (this.checkRegionLabels()) {
+                    //modify
+                    //console.log(this.getCurrentFrameNumber());
+                    //获得上一帧数
                     this.prevFrameIndex = this.getCurrentFrameNumber();
                     this.cleanSelectedElements()
                     //raise before next frame
