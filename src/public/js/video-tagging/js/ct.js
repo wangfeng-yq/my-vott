@@ -9551,9 +9551,11 @@ var CanvasTools;
                 }
                 toString() {
                     let str = this.primary.name;
-                    this.secondary.forEach((tag) => {
-                        str += " " + tag.name;
-                    });
+                    //modify
+                    console.log("ct.js" + str);
+                    // this.secondary.forEach((tag) => {
+                    //     str += " " + tag.name;
+                    // });
                     return str;
                 }
             }

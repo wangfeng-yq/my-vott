@@ -448,6 +448,7 @@ function openPath(pathName, isDir, isRecords = false) {
   async function loadTagger(e) {
     //modify
     console.log(config)
+    //关闭帧速率的验证
     if (framerate.validity.valid && inputtags.validity.valid) {
       $('.bootstrap-tagsinput').last().removeClass("invalid");
 
@@ -777,6 +778,12 @@ function save() {
   if (!saveLock) {
     saveLock = true;
     
+    //modify
+    // for(var i=0;i < visitedFrames.length;i++) {
+    //   console.log(videotagging.frames.i);
+    // }
+
+
     fs.writeFile(`${videotagging.src}.json`, JSON.stringify(saveObject), () => {
       saveState = JSON.stringify(saveObject);
       console.log("saved");
