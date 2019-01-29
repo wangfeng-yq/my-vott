@@ -177,7 +177,7 @@
                     <font color="white" size="4">From</font>
                     <input type="text" id="startFrame" size="8" placeholder="默认当前帧">
                     <font color="white" size="4">To</font> 
-                    <input type="text" id="endFrame" size="8">
+                    <input type="text" id="endFrame" size="8" placeholder="默认总帧数">
                     <font color="white" size="4">TrackId:</font>
                     <input type="text" id="selectTrackId" size="8">
                     <input type="button" id="deleteFrames" value="delete" on-click="deleteFramesClick">
@@ -703,11 +703,12 @@
                 
                 //modify
                 let tid = document.getElementById("trackIdText").value;
+                // 如果region有trackId且trackIdText内无内容，使用trackIdLockText内的值
                 if(this.lockTrackId) {
                     tid = document.getElementById("trackIdLockText").value;
                 }
                 //modify
-                console.log(tags)
+                console.log("tid: "+tid)
                 let tagsDescriptor = null;
                 let primaryTag = null;
                 let secondaryTags = [];
@@ -730,15 +731,18 @@
                     // }
                     console.log("primaryTag.name")  
                     if(tid) {
-                        primaryTag.name = primaryTag.name + tid;
+                        primaryTag.name = tid;
+                        // primaryTag.name = primaryTag.name + tid;
                         if(!this.lockTrackId) {
                             this.trackIdValue ++;
                         }  
                     }
                     if(region != null) {
-                        primaryTag.name = primaryTag.name + " <br/> " + region.trackId;
+                        primaryTag.name = region.trackId;
+                        // primaryTag.name = primaryTag.name + region.trackId;
                     }
-                    console.log(primaryTag);
+                    console.log("primaryTag");
+                    console.log(primaryTag)
                     tagsDescriptor = new this.CT.Base.Tags.TagsDescriptor(primaryTag, secondaryTags);
                 }
                 return tagsDescriptor;
@@ -797,15 +801,16 @@
             deleteFramesClick: function(){
                 //startFrame,endFrame
                 var startValue = $("#startFrame").val() ? $("#startFrame").val() : $("#frameText").val();
-                var endValue = $("#endFrame").val() ? $("#endFrame").val() : "";
+                var allFrames = $("#frameAllText").html().replace("共","").replace("帧","");
+                var endValue = $("#endFrame").val() ? $("#endFrame").val() : allFrames;
                 var selectDeleteTrackId =  $("#selectTrackId").val() ? $("#selectTrackId").val() : "";
-                var allFrames = $("#frameAllText").html().replace("共","").replace("帧","")
+                
 
 
-                if(endValue == "") {
-                    alert("未填写结束帧");
-                    return ;
-                }
+                // if(endValue == "") {
+                //     alert("未填写结束帧");
+                //     return ;
+                // }
                 if(selectDeleteTrackId == ""){
                     alert("未填写trackId");
                     return;
@@ -818,27 +823,32 @@
                 
                 console.log("selectDeleteTrackId" + selectDeleteTrackId)
                 //判断输入的结束帧是否超过视频总帧数
-                if(endF < frameAllTextValue) {
+                console.log("`````````````````````````````````````");
+                console.log("endF:  " + endF + "  frameAllTextValue: " + frameAllTextValue)
+                if(endF <= frameAllTextValue) {
                     var yes = confirm("确认删除第 "+startF+" 帧到第 "+endF+" 帧，trackId为："+ selectDeleteTrackId + " 的标注结果吗？");
                     for(var i = startF;i <= endF ; i++) {
                         //将符合条件的去除并重新赋值
-                        for(var j=0;j<this.frames[i].length;i++){
-                            console.log("in the for");
-                            //console.log(this.frames[i][j])
+                        if(this.frames[i]) {
                             this.frames[i] = this.frames[i].filter((region) => { 
                                 return parseInt(region.trackId) != parseInt(selectDeleteTrackId) 
                             });
-                        }
-                        
+                        }                        
                     }
                     //重绘所有region
                     this.showAllRegions();
+                    $("#selectTrackId").val("");
                 } else {
                     alert("结束帧大于视频总帧")
-                }    
+                }  
             },
             trackIdTextClick: function (){
                 //console.log("click")
+                if(document.getElementById("trackIdText").value.indexOf("set") == 0) {
+                    console.log("this string start with set");
+                    var value = document.getElementById("trackIdText").value.substring(3).replace(/(^\s*)|(\s*$)/g, ''); 
+                    this.trackIdValue = parseInt(value);
+                }
                 document.getElementById("trackIdText").value = this.trackIdValue;
                 //Number(Math.random().toString().substr(3,length) + Date.now()).toString(36);
             },
@@ -909,19 +919,22 @@
                 this.optionalTags.resetSelected();
                 if (id != "") {
                     let region = this.getRegionById(id);
+                    
                     let tid = document.getElementById("trackIdText").value;
                     if(this.lockTrackId) {
                         tid = document.getElementById("trackIdLockText").value;
                     }
-                    if(tid){
+                    if(tid && !region.trackId){
                         // console.log("tid")
                         // console.log(tid)
                         region.trackId =  tid;
                     }
                     document.getElementById("trackIdText").value = "";
                     if(this.lockTrackId && region.trackId) {
-                        document.getElementById("trackIdLockText").value = region.trackId ? region.trackId : "";
-                        this.lockTrackIdValue = document.getElementById("trackIdLockText").value;
+                        if(document.getElementById("trackIdLockText").value == "") {
+                            document.getElementById("trackIdLockText").value = region.trackId ? region.trackId : "";
+                            this.lockTrackIdValue = document.getElementById("trackIdLockText").value;
+                        }
                     }
                     console.log("selectRegion ")
                     console.log(region)
